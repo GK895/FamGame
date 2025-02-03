@@ -28,15 +28,11 @@
             <h2>Husband Tasks</h2>
             <div class="task" onclick="addPoints('husband', 10)">Prepare Surprise <span>+10 pts</span></div>
             <div class="task" onclick="addPoints('husband', 15)">Plan Date Night <span>+15 pts</span></div>
-            <div class="task" onclick="addPoints('husband', 20)">Cook a Special Dinner <span>+20 pts</span></div>
-            <div class="task" onclick="addPoints('husband', 25)">Write a Love Letter <span>+25 pts</span></div>
         </div>
         <div class="section">
             <h2>Wife Tasks</h2>
             <div class="task" onclick="addPoints('wife', 10)">Cook Favorite Meal <span>+10 pts</span></div>
             <div class="task" onclick="addPoints('wife', 15)">Support Husband's Project <span>+15 pts</span></div>
-            <div class="task" onclick="addPoints('wife', 20)">Plan a Relaxing Spa Day <span>+20 pts</span></div>
-            <div class="task" onclick="addPoints('wife', 25)">Leave a Sweet Note <span>+25 pts</span></div>
         </div>
         <div class="section">
             <h2>Rewards</h2>
@@ -47,82 +43,85 @@
             <button onclick="resetPoints()">Reset Points</button>
         </div>
     </div>
+
     <script>
         let sheetId = "1YVO59qBs1atrOgY6rJLUI75-KzKBF78iN5ZH8r6Yv0o";
-        let apiKey = "YOUR_GOOGLE_API_KEY";
-        let accessToken = localStorage.getItem("google_access_token") || null;
+        let clientId = "203005866385-jm1rkp0u1j94i8iilgs4dn9l7j5ivm2a.apps.googleusercontent.com";
+        let redirectUri = "https://gk895.github.io/FamGame/";
+        let scope = "https://www.googleapis.com/auth/spreadsheets";
+        let apiKey = "AIzaSyCtGnPiwGVuByuzMxeprkhfVP4ZTfrAXus";
+        let accessToken = null;
 
-        function authenticate() {
-            let clientId = "203005866385-jm1rkp0u1j94i8iilgs4dn9l7j5ivm2a.apps.googleusercontent.com";
-             let redirectUri = window.location.origin;
-            let scope = "https://www.googleapis.com/auth/spreadsheets";
+        async function authenticate() {
             let authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=consent`;
             window.location.href = authUrl;
         }
 
         function getAccessTokenFromURL() {
             let params = new URLSearchParams(window.location.hash.substring(1));
-            let token = params.get("access_token");
-            if (token) {
-                localStorage.setItem("google_access_token", token);
-            }
-            return token;
+            return params.get("access_token");
         }
 
         async function fetchPoints() {
-            if (!accessToken) return authenticate();
-            let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
-            try {
-                let response = await fetch(sheetUrl, { headers: { "Authorization": `Bearer ${accessToken}` } });
-                let data = await response.json();
-                if (data.error) throw data.error;
-                let values = data.values ? data.values[0] : [0, 0, 0];
-                updateUI(parseInt(values[0]) || 0, parseInt(values[1]) || 0);
-            } catch (error) {
-                console.error("Error fetching points:", error);
-                authenticate();
+            if (!accessToken) {
+                console.error("No access token found.");
+                return;
             }
+
+            let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
+            let response = await fetch(sheetUrl, {
+                headers: { "Authorization": `Bearer ${accessToken}` }
+            });
+
+            let data = await response.json();
+            let values = data.values ? data.values[0] : [0, 0, 0];
+            let husbandPoints = parseInt(values[0]) || 0;
+            let wifePoints = parseInt(values[1]) || 0;
+            updateUI(husbandPoints, wifePoints);
         }
 
         async function updatePoints(husbandPoints, wifePoints) {
-            if (!accessToken) return authenticate();
-            let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
-            let response = await fetch(sheetUrl, { headers: { "Authorization": `Bearer ${accessToken}` } });
-            let data = await response.json();
-            let values = data.values ? data.values[0] : [0, 0, 0];
-
-            husbandPoints += parseInt(values[0]) || 0;
-            wifePoints += parseInt(values[1]) || 0;
-
-            let updatedValues = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
-            let updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?valueInputOption=RAW`;
-
-            try {
-                await fetch(updateUrl, {
-                    method: "PUT",
-                    headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ values: updatedValues })
-                });
-                updateUI(husbandPoints, wifePoints);
-            } catch (error) {
-                console.error("Error updating points:", error);
-                authenticate();
+            if (!accessToken) {
+                console.error("No access token found.");
+                return;
             }
+
+            let values = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
+            let updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?valueInputOption=RAW`;
+            await fetch(updateUrl, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ values })
+            });
+
+            updateUI(husbandPoints, wifePoints);
         }
 
         function addPoints(person, value) {
             fetchPoints().then(() => {
-                let husbandPoints = person === 'husband' ? value : 0;
-                let wifePoints = person === 'wife' ? value : 0;
+                let husbandPoints = parseInt(document.getElementById('husbandPercent').innerText) || 0;
+                let wifePoints = parseInt(document.getElementById('wifePercent').innerText) || 0;
+
+                if (person === 'husband') {
+                    husbandPoints += value;
+                } else if (person === 'wife') {
+                    wifePoints += value;
+                }
+
                 updatePoints(husbandPoints, wifePoints);
             });
         }
 
         function updateUI(husbandPoints, wifePoints) {
             let totalPoints = husbandPoints + wifePoints;
+            let husbandPercent = totalPoints > 0 ? Math.round((husbandPoints / totalPoints) * 100) : 0;
+            let wifePercent = totalPoints > 0 ? Math.round((wifePoints / totalPoints) * 100) : 0;
             document.getElementById('totalPoints').innerText = totalPoints;
-            document.getElementById('husbandPercent').innerText = `${Math.round((husbandPoints / totalPoints) * 100)}%`;
-            document.getElementById('wifePercent').innerText = `${Math.round((wifePoints / totalPoints) * 100)}%`;
+            document.getElementById('husbandPercent').innerText = husbandPercent + "%";
+            document.getElementById('wifePercent').innerText = wifePercent + "%";
         }
 
         function resetPoints() {
@@ -130,8 +129,11 @@
         }
 
         accessToken = getAccessTokenFromURL();
-        if (!accessToken) authenticate();
-        else fetchPoints();
+        if (!accessToken) {
+            authenticate();
+        } else {
+            fetchPoints();
+        }
     </script>
 </body>
 </html>
