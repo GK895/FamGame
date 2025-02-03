@@ -54,24 +54,34 @@
 
         function authenticate() {
             let clientId = "203005866385-jm1rkp0u1j94i8iilgs4dn9l7j5ivm2a.apps.googleusercontent.com";
-            let redirectUri = "https://gk895.github.io/FamGame/";
+             let redirectUri = window.location.origin;
             let scope = "https://www.googleapis.com/auth/spreadsheets";
             let authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=consent`;
             window.location.href = authUrl;
         }
 
-         function getAccessTokenFromURL() {
+        function getAccessTokenFromURL() {
             let params = new URLSearchParams(window.location.hash.substring(1));
-            return params.get("access_token");
+            let token = params.get("access_token");
+            if (token) {
+                localStorage.setItem("google_access_token", token);
+            }
+            return token;
         }
 
         async function fetchPoints() {
             if (!accessToken) return authenticate();
             let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
-            let response = await fetch(sheetUrl, { headers: { "Authorization": `Bearer ${accessToken}` } });
-            let data = await response.json();
-            let values = data.values ? data.values[0] : [0, 0, 0];
-            updateUI(parseInt(values[0]) || 0, parseInt(values[1]) || 0);
+            try {
+                let response = await fetch(sheetUrl, { headers: { "Authorization": `Bearer ${accessToken}` } });
+                let data = await response.json();
+                if (data.error) throw data.error;
+                let values = data.values ? data.values[0] : [0, 0, 0];
+                updateUI(parseInt(values[0]) || 0, parseInt(values[1]) || 0);
+            } catch (error) {
+                console.error("Error fetching points:", error);
+                authenticate();
+            }
         }
 
         async function updatePoints(husbandPoints, wifePoints) {
@@ -80,24 +90,30 @@
             let response = await fetch(sheetUrl, { headers: { "Authorization": `Bearer ${accessToken}` } });
             let data = await response.json();
             let values = data.values ? data.values[0] : [0, 0, 0];
+
             husbandPoints += parseInt(values[0]) || 0;
             wifePoints += parseInt(values[1]) || 0;
+
             let updatedValues = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
             let updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?valueInputOption=RAW`;
-            await fetch(updateUrl, {
-                method: "PUT",
-                headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ values: updatedValues })
-            });
-            updateUI(husbandPoints, wifePoints);
+
+            try {
+                await fetch(updateUrl, {
+                    method: "PUT",
+                    headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ values: updatedValues })
+                });
+                updateUI(husbandPoints, wifePoints);
+            } catch (error) {
+                console.error("Error updating points:", error);
+                authenticate();
+            }
         }
 
         function addPoints(person, value) {
             fetchPoints().then(() => {
-                let husbandPoints = 0;
-                let wifePoints = 0;
-                if (person === 'husband') husbandPoints += value;
-                else wifePoints += value;
+                let husbandPoints = person === 'husband' ? value : 0;
+                let wifePoints = person === 'wife' ? value : 0;
                 updatePoints(husbandPoints, wifePoints);
             });
         }
