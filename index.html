@@ -60,7 +60,7 @@
             window.location.href = authUrl;
         }
 
-        function getAccessTokenFromURL() {
+         function getAccessTokenFromURL() {
             let params = new URLSearchParams(window.location.hash.substring(1));
             return params.get("access_token");
         }
@@ -76,20 +76,26 @@
 
         async function updatePoints(husbandPoints, wifePoints) {
             if (!accessToken) return authenticate();
-            let values = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
+            let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
+            let response = await fetch(sheetUrl, { headers: { "Authorization": `Bearer ${accessToken}` } });
+            let data = await response.json();
+            let values = data.values ? data.values[0] : [0, 0, 0];
+            husbandPoints += parseInt(values[0]) || 0;
+            wifePoints += parseInt(values[1]) || 0;
+            let updatedValues = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
             let updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?valueInputOption=RAW`;
             await fetch(updateUrl, {
                 method: "PUT",
                 headers: { "Authorization": `Bearer ${accessToken}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ values })
+                body: JSON.stringify({ values: updatedValues })
             });
             updateUI(husbandPoints, wifePoints);
         }
 
         function addPoints(person, value) {
             fetchPoints().then(() => {
-                let husbandPoints = parseInt(document.getElementById('husbandPercent').innerText) || 0;
-                let wifePoints = parseInt(document.getElementById('wifePercent').innerText) || 0;
+                let husbandPoints = 0;
+                let wifePoints = 0;
                 if (person === 'husband') husbandPoints += value;
                 else wifePoints += value;
                 updatePoints(husbandPoints, wifePoints);
