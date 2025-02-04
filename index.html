@@ -67,18 +67,23 @@
                 console.error("No access token found.");
                 return;
             }
-
+        
             let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
             let response = await fetch(sheetUrl, {
                 headers: { "Authorization": `Bearer ${accessToken}` }
             });
-
+        
             let data = await response.json();
             let values = data.values ? data.values[0] : [0, 0, 0];
             let husbandPoints = parseInt(values[0]) || 0;
             let wifePoints = parseInt(values[1]) || 0;
-            updateUI(husbandPoints, wifePoints);
+        
+            // Обновляем UI с правильными данными
+            document.getElementById('totalPoints').innerText = husbandPoints + wifePoints;
+            document.getElementById('husbandPercent').innerText = husbandPoints;
+            document.getElementById('wifePercent').innerText = wifePoints;
         }
+
 
         async function updatePoints(husbandPoints, wifePoints) {
             if (!accessToken) {
@@ -100,19 +105,20 @@
             updateUI(husbandPoints, wifePoints);
         }
 
-        function addPoints(person, value) {
-            fetchPoints().then(() => {
-                let husbandPoints = parseInt(document.getElementById('husbandPercent').innerText) || 0;
-                let wifePoints = parseInt(document.getElementById('wifePercent').innerText) || 0;
+        async function addPoints(person, value) {
+            await fetchPoints(); // Дождёмся загрузки текущих баллов
 
-                if (person === 'husband') {
-                    husbandPoints += value;
-                } else if (person === 'wife') {
-                    wifePoints += value;
-                }
+            let husbandPoints = parseInt(document.getElementById('husbandPercent').innerText) || 0;
+            let wifePoints = parseInt(document.getElementById('wifePercent').innerText) || 0;
 
-                updatePoints(husbandPoints, wifePoints);
-            });
+            if (person === 'husband') {
+                husbandPoints += value;
+            } else if (person === 'wife') {
+                wifePoints += value;
+            }
+
+            await updatePoints(husbandPoints, wifePoints); // Обновляем баллы в Google Sheets
+        });
         }
 
         function updateUI(husbandPoints, wifePoints) {
