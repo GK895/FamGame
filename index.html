@@ -1,123 +1,113 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FamGame - Couples Reward System</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: #004d40; }
-        .task, .reward { padding: 10px; margin: 10px 0; background: #e8f5e9; border-radius: 5px; cursor: pointer; display: flex; justify-content: space-between; }
-        .task:hover, .reward:hover { background: #c8e6c9; }
-        #points { text-align: center; font-size: 24px; font-weight: bold; color: #004d40; }
-        .section { margin-top: 20px; }
-        button { background-color: #004d40; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; }
-        button:hover { background-color: #00332a; }
-        .progress { text-align: center; font-size: 18px; margin-top: 10px; color: #004d40; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>FamGame - Couples Reward System</h1>
-        <h2>Total Points: <span id="totalPoints">0</span></h2>
-        <div class="progress">
-            Husband Contribution: <span id="husbandPoints">0</span> | Wife Contribution: <span id="wifePoints">0</span>
-        </div>
-
-        <div class="section">
-            <h2>Husband Tasks</h2>
-            <div class="husband-tasks"></div>
-        </div>
-
-        <div class="section">
-            <h2>Wife Tasks</h2>
-            <div class="wife-tasks"></div>
-        </div>
-
-        <div class="section">
-            <h2>Rewards</h2>
-            <div class="rewards-section"></div>
-        </div>
-
-        <div class="section">
-            <button onclick="resetPoints()">Reset Points</button>
-        </div>
-    </div>
-
 <script>
     let sheetId = "1YVO59qBs1atrOgY6rJLUI75-KzKBF78iN5ZH8r6Yv0o";
+    let clientId = "203005866385-jm1rkp0u1j94i8iilgs4dn9l7j5ivm2a.apps.googleusercontent.com";
+    let redirectUri = "https://gk895.github.io/FamGame/";
+    let scope = "https://www.googleapis.com/auth/spreadsheets";
     let apiKey = "AIzaSyCtGnPiwGVuByuzMxeprkhfVP4ZTfrAXus";
     let accessToken = null;
 
-   let tasks = [
-        { text: "Give a 10-minute massage", points: 10, person: "husband" },
-        { text: "Plan a surprise date night", points: 15, person: "husband" },
-        { text: "Write a heartfelt love letter", points: 10, person: "husband" },
-        { text: "Cook their favorite meal", points: 10, person: "wife" },
-        { text: "Give a passionate kiss out of nowhere", points: 5, person: "husband" },
-        { text: "Watch a movie of their choice without complaining", points: 10, person: "wife" },
-        { text: "Run them a relaxing bubble bath", points: 10, person: "husband" },
-        { text: "Take over one of their chores for the day", points: 10, person: "wife" },
-        { text: "Buy them a small surprise gift", points: 15, person: "husband" },
-        { text: "Plan a fun bedroom game night", points: 20, person: "wife" },
-        { text: "Make breakfast in bed", points: 10, person: "husband" },
-        { text: "Leave a cute voice note or love message", points: 5, person: "wife" },
-        { text: "Give a full body massage with candles and oils", points: 20, person: "husband" },
-        { text: "Plan an adventure day (hiking, road trip, or surprise outing)", points: 15, person: "wife" },
-        { text: "Compliment them sincerely 5 times in one day", points: 5, person: "husband" },
-    ];
-
-    let rewards = [
-        { text: "Movie Night (Cuddles & Snacks)", cost: 50 },
-        { text: "Breakfast in Bed (Their Choice)", cost: 40 },
-        { text: "Full-Body Massage (30 Minutes)", cost: 70 },
-        { text: "Romantic Dinner Date (At Home or Outside)", cost: 100 },
-        { text: "Love Letter Read-Aloud (Personal & Emotional)", cost: 30 },
-        { text: "Surprise 'I Love You' Challenge", cost: 50 },
-        { text: "Passionate Kissing Session (10 Mins)", cost: 30 },
-        { text: "'Yes Day' (Partner Says Yes to Everything for a Day)", cost: 200 },
-        { text: "Strip Poker or Romantic Game Night", cost: 150 },
-        { text: "Bubble Bath Together (Candles, Music, & Wine)", cost: 80 },
-        { text: "Bedroom Roleplay Night", cost: 200 },
-        { text: "Weekend Getaway or Staycation", cost: 500 },
-        { text: "'24-Hour King/Queen Treatment' (Full Pampering & Love)", cost: 300 },
-        { text: "Slow Dance to a Romantic Song", cost: 40 },
-        { text: "Naughty Surprise Night (Partner's Fantasy)", cost: 250 },
-    ];
-
-    function loadTasks() {
-        let husbandSection = document.querySelector(".husband-tasks");
-        let wifeSection = document.querySelector(".wife-tasks");
-
-        tasks.forEach(task => {
-            let taskElement = document.createElement("div");
-            taskElement.classList.add("task");
-            taskElement.innerHTML = `${task.text} <span>+${task.points} pts</span>`;
-            taskElement.onclick = () => addPoints(task.person, task.points);
-
-            if (task.person === "husband") {
-                husbandSection.appendChild(taskElement);
-            } else {
-                wifeSection.appendChild(taskElement);
-            }
-        });
+    async function authenticate() {
+        let authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=consent`;
+        window.location.href = authUrl;
     }
 
-    function loadRewards() {
-        let rewardsSection = document.querySelector(".rewards-section");
-
-        rewards.forEach(reward => {
-            let rewardElement = document.createElement("div");
-            rewardElement.classList.add("reward");
-            rewardElement.innerHTML = `${reward.text} <span>-${reward.cost} pts</span>`;
-            rewardElement.onclick = () => redeemPoints(reward.cost);
-            rewardsSection.appendChild(rewardElement);
-        });
+    function getAccessTokenFromURL() {
+        let params = new URLSearchParams(window.location.hash.substring(1));
+        return params.get("access_token");
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        loadTasks();
-        loadRewards();
-    });
+    async function fetchPoints() {
+        if (!accessToken) {
+            console.error("No access token found.");
+            return { husbandPoints: 0, wifePoints: 0 };
+        }
+
+        let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
+        let response = await fetch(sheetUrl, {
+            headers: { "Authorization": `Bearer ${accessToken}` }
+        });
+
+        let data = await response.json();
+        let values = data.values ? data.values[0] : [0, 0, 0];
+        let husbandPoints = parseInt(values[0]) || 0;
+        let wifePoints = parseInt(values[1]) || 0;
+
+        updateUI(husbandPoints, wifePoints);
+        return { husbandPoints, wifePoints };
+    }
+
+    async function updatePoints(husbandPoints, wifePoints) {
+        if (!accessToken) {
+            console.error("No access token found.");
+            return;
+        }
+
+        let values = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
+        let updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?valueInputOption=RAW`;
+
+        await fetch(updateUrl, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ values })
+        });
+
+        updateUI(husbandPoints, wifePoints);
+    }
+
+    async function addPoints(person, value) {
+        let currentPoints = await fetchPoints();
+        let husbandPoints = currentPoints.husbandPoints;
+        let wifePoints = currentPoints.wifePoints;
+
+        if (person === 'husband') {
+            husbandPoints += value;
+        } else if (person === 'wife') {
+            wifePoints += value;
+        }
+
+        await updatePoints(husbandPoints, wifePoints);
+    }
+
+    async function redeemPoints(cost) {
+        let currentPoints = await fetchPoints();
+        let husbandPoints = currentPoints.husbandPoints;
+        let wifePoints = currentPoints.wifePoints;
+        let totalPoints = husbandPoints + wifePoints;
+
+        if (totalPoints < cost) {
+            alert("Not enough points to redeem this reward!"); // Show message if not enough points
+            return;
+        }
+
+        // Deduct points proportionally from both
+        let husbandShare = husbandPoints / totalPoints;
+        let wifeShare = wifePoints / totalPoints;
+
+        husbandPoints -= Math.round(cost * husbandShare);
+        wifePoints -= Math.round(cost * wifeShare);
+
+        await updatePoints(husbandPoints, wifePoints);
+    }
+
+    function updateUI(husbandPoints, wifePoints) {
+        let totalPoints = husbandPoints + wifePoints;
+        document.getElementById('totalPoints').innerText = totalPoints;
+        document.getElementById('husbandPercent').innerText = husbandPoints;
+        document.getElementById('wifePercent').innerText = wifePoints;
+    }
+
+    function resetPoints() {
+        updatePoints(0, 0);
+    }
+
+    // Get access token & authenticate if missing
+    accessToken = getAccessTokenFromURL();
+    if (!accessToken) {
+        authenticate();
+    } else {
+        fetchPoints();
+    }
 </script>
