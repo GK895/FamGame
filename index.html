@@ -12,7 +12,7 @@
         .task:hover, .reward:hover { background: #c8e6c9; }
         #points { text-align: center; font-size: 24px; font-weight: bold; color: #004d40; }
         .section { margin-top: 20px; }
-        button { background-color: #004d40; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+        button { background-color: #004d40; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; }
         button:hover { background-color: #00332a; }
         .progress { text-align: center; font-size: 18px; margin-top: 10px; color: #004d40; }
     </style>
@@ -47,34 +47,31 @@
 
 <script>
     let sheetId = "1YVO59qBs1atrOgY6rJLUI75-KzKBF78iN5ZH8r6Yv0o";
-    let clientId = "203005866385-jm1rkp0u1j94i8iilgs4dn9l7j5ivm2a.apps.googleusercontent.com";
-    let redirectUri = "https://gk895.github.io/FamGame/";
-    let scope = "https://www.googleapis.com/auth/spreadsheets";
     let apiKey = "AIzaSyCtGnPiwGVuByuzMxeprkhfVP4ZTfrAXus";
     let accessToken = null;
 
     let tasks = [
         { text: "Give a 10-minute massage", points: 10, person: "husband" },
         { text: "Plan a surprise date night", points: 15, person: "husband" },
-        { text: "Write a heartfelt love letter", points: 10, person: "husband" },
-        { text: "Do the dishes for a week", points: 10, person: "husband" },
+        { text: "Write a love letter", points: 10, person: "husband" },
         { text: "Make her coffee in the morning", points: 5, person: "husband" },
-        { text: "Run her a warm bath", points: 15, person: "husband" },
         { text: "Clean the house before she asks", points: 10, person: "husband" },
-        { text: "Organize a surprise date night", points: 15, person: "husband" },
-        { text: "Send a cute voice message", points: 5, person: "husband" },
-        { text: "Plan a romantic walk together", points: 10, person: "husband" },
+        { text: "Run a bubble bath for her", points: 15, person: "husband" },
+        { text: "Leave a voice note saying you love her", points: 5, person: "husband" },
+        { text: "Plan a candlelight dinner", points: 20, person: "husband" },
+        { text: "Do the dishes for a week", points: 15, person: "husband" },
+        { text: "Take her out for ice cream", points: 10, person: "husband" },
 
         { text: "Cook his favorite meal", points: 10, person: "wife" },
-        { text: "Plan a romantic movie night", points: 15, person: "wife" },
-        { text: "Leave a sweet note for him", points: 5, person: "wife" },
-        { text: "Surprise him with his favorite dessert", points: 10, person: "wife" },
-        { text: "Give him a head massage", points: 15, person: "wife" },
-        { text: "Dress up for a romantic evening", points: 10, person: "wife" },
-        { text: "Compliment him multiple times", points: 5, person: "wife" },
-        { text: "Take over one of his chores for the day", points: 10, person: "wife" },
-        { text: "Organize a gaming night for him", points: 15, person: "wife" },
-        { text: "Cuddle with him for 30 minutes", points: 10, person: "wife" }
+        { text: "Surprise him with a small gift", points: 15, person: "wife" },
+        { text: "Give him a long hug", points: 5, person: "wife" },
+        { text: "Support his hobby for a day", points: 10, person: "wife" },
+        { text: "Plan a gaming night for him", points: 15, person: "wife" },
+        { text: "Send him a flirty text during the day", points: 5, person: "wife" },
+        { text: "Leave a romantic note in his wallet", points: 10, person: "wife" },
+        { text: "Wear his favorite outfit", points: 20, person: "wife" },
+        { text: "Take over one of his chores", points: 15, person: "wife" },
+        { text: "Plan a weekend getaway", points: 25, person: "wife" }
     ];
 
     let rewards = [
@@ -83,14 +80,16 @@
         { text: "Full-Body Massage (30 Minutes)", cost: 70 },
         { text: "Romantic Dinner Date", cost: 100 },
         { text: "Passionate Kissing Session", cost: 30 },
-        { text: "'Yes Day' (Say Yes to Everything for a Day)", cost: 200 },
-        { text: "Strip Poker or Romantic Game Night", cost: 150 },
+        { text: "Yes Day (Say Yes to Everything for a Day)", cost: 200 },
         { text: "Bubble Bath Together", cost: 80 },
         { text: "Bedroom Roleplay Night", cost: 200 },
-        { text: "Weekend Getaway or Staycation", cost: 500 },
+        { text: "Surprise Romantic Adventure", cost: 150 },
+        { text: "Weekend Getaway", cost: 500 },
         { text: "24-Hour King/Queen Treatment", cost: 300 },
         { text: "Slow Dance to a Romantic Song", cost: 40 },
-        { text: "Naughty Surprise Night", cost: 250 }
+        { text: "Naughty Surprise Night", cost: 250 },
+        { text: "Love Letter Reading", cost: 30 },
+        { text: "Personalized Gift Exchange", cost: 120 }
     ];
 
     function loadTasks() {
