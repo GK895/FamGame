@@ -22,7 +22,7 @@
         <h1>FamGame - Couples Reward System</h1>
         <h2>Total Points: <span id="totalPoints">0</span></h2>
         <div class="progress">
-            Husband Contribution: <span id="husbandPercent">0</span> | Wife Contribution: <span id="wifePercent">0</span>
+            Husband Contribution: <span id="husbandPoints">0</span> | Wife Contribution: <span id="wifePoints">0</span>
         </div>
 
         <div class="section">
@@ -101,7 +101,7 @@
             let taskElement = document.createElement("div");
             taskElement.classList.add("task");
             taskElement.innerHTML = `${task.text} <span>+${task.points} pts</span>`;
-            taskElement.onclick = () => addPoints(task.person, task.points);
+            taskElement.onclick = function() { addPoints(task.person, task.points); };
 
             if (task.person === "husband") {
                 husbandSection.appendChild(taskElement);
@@ -118,7 +118,7 @@
             let rewardElement = document.createElement("div");
             rewardElement.classList.add("reward");
             rewardElement.innerHTML = `${reward.text} <span>-${reward.cost} pts</span>`;
-            rewardElement.onclick = () => redeemPoints(reward.cost);
+            rewardElement.onclick = function() { redeemPoints(reward.cost); };
             rewardsSection.appendChild(rewardElement);
         });
     }
