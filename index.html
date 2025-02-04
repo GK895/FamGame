@@ -52,94 +52,81 @@
         let apiKey = "AIzaSyCtGnPiwGVuByuzMxeprkhfVP4ZTfrAXus";
         let accessToken = null;
 
-        async function authenticate() {
-            let authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=consent`;
-            window.location.href = authUrl;
-        }
-
-        function getAccessTokenFromURL() {
-            let params = new URLSearchParams(window.location.hash.substring(1));
-            return params.get("access_token");
-        }
-
         async function fetchPoints() {
-            if (!accessToken) {
-                console.error("No access token found.");
-                return;
-            }
-        
-            let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
-            let response = await fetch(sheetUrl, {
-                headers: { "Authorization": `Bearer ${accessToken}` }
-            });
-        
-            let data = await response.json();
-            let values = data.values ? data.values[0] : [0, 0, 0];
-            let husbandPoints = parseInt(values[0]) || 0;
-            let wifePoints = parseInt(values[1]) || 0;
-        
-            // Обновляем UI с правильными данными
-            document.getElementById('totalPoints').innerText = husbandPoints + wifePoints;
-            document.getElementById('husbandPercent').innerText = husbandPoints;
-            document.getElementById('wifePercent').innerText = wifePoints;
-        }
-
-
-        async function updatePoints(husbandPoints, wifePoints) {
-            if (!accessToken) {
-                console.error("No access token found.");
-                return;
-            }
-
-            let values = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
-            let updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?valueInputOption=RAW`;
-            await fetch(updateUrl, {
-                method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${accessToken}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ values })
-            });
-
-            updateUI(husbandPoints, wifePoints);
-        }
-
-        async function addPoints(person, value) {
-            await fetchPoints(); // Дождёмся загрузки текущих баллов
-
-            let husbandPoints = parseInt(document.getElementById('husbandPercent').innerText) || 0;
-            let wifePoints = parseInt(document.getElementById('wifePercent').innerText) || 0;
-
-            if (person === 'husband') {
-                husbandPoints += value;
-            } else if (person === 'wife') {
-                wifePoints += value;
-            }
-
-            await updatePoints(husbandPoints, wifePoints); // Обновляем баллы в Google Sheets
-        });
-        }
-
-        function updateUI(husbandPoints, wifePoints) {
-            let totalPoints = husbandPoints + wifePoints;
-            let husbandPercent = totalPoints > 0 ? Math.round((husbandPoints / totalPoints) * 100) : 0;
-            let wifePercent = totalPoints > 0 ? Math.round((wifePoints / totalPoints) * 100) : 0;
-            document.getElementById('totalPoints').innerText = totalPoints;
-            document.getElementById('husbandPercent').innerText = husbandPercent + "%";
-            document.getElementById('wifePercent').innerText = wifePercent + "%";
-        }
-
-        function resetPoints() {
-            updatePoints(0, 0);
-        }
-
-        accessToken = getAccessTokenFromURL();
         if (!accessToken) {
-            authenticate();
-        } else {
-            fetchPoints();
+            console.error("No access token found.");
+            return;
         }
-    </script>
-</body>
-</html>
+        
+        let sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey}`;
+        let response = await fetch(sheetUrl, {
+            headers: { "Authorization": `Bearer ${accessToken}` }
+        });
+
+        let data = await response.json();
+        let values = data.values ? data.values[0] : [0, 0, 0];
+        let husbandPoints = parseInt(values[0]) || 0;
+        let wifePoints = parseInt(values[1]) || 0;
+
+        updateUI(husbandPoints, wifePoints);
+    }
+
+    async function updatePoints(husbandPoints, wifePoints) {
+        if (!accessToken) {
+            console.error("No access token found.");
+            return;
+        }
+
+        let values = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
+        let updateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?valueInputOption=RAW`;
+        
+        await fetch(updateUrl, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ values })
+        });
+
+        updateUI(husbandPoints, wifePoints);
+    }
+
+    async function addPoints(person, value) {
+        await fetchPoints(); // Дождёмся загрузки текущих баллов
+
+        let husbandPoints = parseInt(document.getElementById('husbandPercent').innerText) || 0;
+        let wifePoints = parseInt(document.getElementById('wifePercent').innerText) || 0;
+
+        if (person === 'husband') {
+            husbandPoints += value;
+        } else if (person === 'wife') {
+            wifePoints += value;
+        }
+
+        await updatePoints(husbandPoints, wifePoints); // Обновляем баллы в Google Sheets
+    }
+
+    function updateUI(husbandPoints, wifePoints) {
+        let totalPoints = husbandPoints + wifePoints;
+        document.getElementById('totalPoints').innerText = totalPoints;
+        document.getElementById('husbandPercent').innerText = husbandPoints;
+        document.getElementById('wifePercent').innerText = wifePoints;
+    }
+
+    function resetPoints() {
+        updatePoints(0, 0);
+    }
+
+    function getAccessTokenFromURL() {
+        let params = new URLSearchParams(window.location.hash.substring(1));
+        return params.get("access_token");
+    }
+
+    accessToken = getAccessTokenFromURL();
+    if (!accessToken) {
+        console.error("No access token found.");
+    } else {
+        fetchPoints();
+    }
+</script>
