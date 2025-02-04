@@ -50,46 +50,40 @@
     let apiKey = "AIzaSyCtGnPiwGVuByuzMxeprkhfVP4ZTfrAXus";
     let accessToken = null;
 
-    let tasks = [
+   let tasks = [
         { text: "Give a 10-minute massage", points: 10, person: "husband" },
         { text: "Plan a surprise date night", points: 15, person: "husband" },
-        { text: "Write a love letter", points: 10, person: "husband" },
-        { text: "Make her coffee in the morning", points: 5, person: "husband" },
-        { text: "Clean the house before she asks", points: 10, person: "husband" },
-        { text: "Run a bubble bath for her", points: 15, person: "husband" },
-        { text: "Leave a voice note saying you love her", points: 5, person: "husband" },
-        { text: "Plan a candlelight dinner", points: 20, person: "husband" },
-        { text: "Do the dishes for a week", points: 15, person: "husband" },
-        { text: "Take her out for ice cream", points: 10, person: "husband" },
-
-        { text: "Cook his favorite meal", points: 10, person: "wife" },
-        { text: "Surprise him with a small gift", points: 15, person: "wife" },
-        { text: "Give him a long hug", points: 5, person: "wife" },
-        { text: "Support his hobby for a day", points: 10, person: "wife" },
-        { text: "Plan a gaming night for him", points: 15, person: "wife" },
-        { text: "Send him a flirty text during the day", points: 5, person: "wife" },
-        { text: "Leave a romantic note in his wallet", points: 10, person: "wife" },
-        { text: "Wear his favorite outfit", points: 20, person: "wife" },
-        { text: "Take over one of his chores", points: 15, person: "wife" },
-        { text: "Plan a weekend getaway", points: 25, person: "wife" }
+        { text: "Write a heartfelt love letter", points: 10, person: "husband" },
+        { text: "Cook their favorite meal", points: 10, person: "wife" },
+        { text: "Give a passionate kiss out of nowhere", points: 5, person: "husband" },
+        { text: "Watch a movie of their choice without complaining", points: 10, person: "wife" },
+        { text: "Run them a relaxing bubble bath", points: 10, person: "husband" },
+        { text: "Take over one of their chores for the day", points: 10, person: "wife" },
+        { text: "Buy them a small surprise gift", points: 15, person: "husband" },
+        { text: "Plan a fun bedroom game night", points: 20, person: "wife" },
+        { text: "Make breakfast in bed", points: 10, person: "husband" },
+        { text: "Leave a cute voice note or love message", points: 5, person: "wife" },
+        { text: "Give a full body massage with candles and oils", points: 20, person: "husband" },
+        { text: "Plan an adventure day (hiking, road trip, or surprise outing)", points: 15, person: "wife" },
+        { text: "Compliment them sincerely 5 times in one day", points: 5, person: "husband" },
     ];
 
     let rewards = [
         { text: "Movie Night (Cuddles & Snacks)", cost: 50 },
-        { text: "Breakfast in Bed", cost: 40 },
+        { text: "Breakfast in Bed (Their Choice)", cost: 40 },
         { text: "Full-Body Massage (30 Minutes)", cost: 70 },
-        { text: "Romantic Dinner Date", cost: 100 },
-        { text: "Passionate Kissing Session", cost: 30 },
-        { text: "Yes Day (Say Yes to Everything for a Day)", cost: 200 },
-        { text: "Bubble Bath Together", cost: 80 },
+        { text: "Romantic Dinner Date (At Home or Outside)", cost: 100 },
+        { text: "Love Letter Read-Aloud (Personal & Emotional)", cost: 30 },
+        { text: "Surprise 'I Love You' Challenge", cost: 50 },
+        { text: "Passionate Kissing Session (10 Mins)", cost: 30 },
+        { text: "'Yes Day' (Partner Says Yes to Everything for a Day)", cost: 200 },
+        { text: "Strip Poker or Romantic Game Night", cost: 150 },
+        { text: "Bubble Bath Together (Candles, Music, & Wine)", cost: 80 },
         { text: "Bedroom Roleplay Night", cost: 200 },
-        { text: "Surprise Romantic Adventure", cost: 150 },
-        { text: "Weekend Getaway", cost: 500 },
-        { text: "24-Hour King/Queen Treatment", cost: 300 },
+        { text: "Weekend Getaway or Staycation", cost: 500 },
+        { text: "'24-Hour King/Queen Treatment' (Full Pampering & Love)", cost: 300 },
         { text: "Slow Dance to a Romantic Song", cost: 40 },
-        { text: "Naughty Surprise Night", cost: 250 },
-        { text: "Love Letter Reading", cost: 30 },
-        { text: "Personalized Gift Exchange", cost: 120 }
+        { text: "Naughty Surprise Night (Partner's Fantasy)", cost: 250 },
     ];
 
     function loadTasks() {
@@ -100,7 +94,7 @@
             let taskElement = document.createElement("div");
             taskElement.classList.add("task");
             taskElement.innerHTML = `${task.text} <span>+${task.points} pts</span>`;
-            taskElement.onclick = function() { addPoints(task.person, task.points); };
+            taskElement.onclick = () => addPoints(task.person, task.points);
 
             if (task.person === "husband") {
                 husbandSection.appendChild(taskElement);
@@ -117,7 +111,7 @@
             let rewardElement = document.createElement("div");
             rewardElement.classList.add("reward");
             rewardElement.innerHTML = `${reward.text} <span>-${reward.cost} pts</span>`;
-            rewardElement.onclick = function() { redeemPoints(reward.cost); };
+            rewardElement.onclick = () => redeemPoints(reward.cost);
             rewardsSection.appendChild(rewardElement);
         });
     }
@@ -126,13 +120,4 @@
         loadTasks();
         loadRewards();
     });
-
-    accessToken = getAccessTokenFromURL();
-    if (!accessToken) {
-        authenticate();
-    } else {
-        fetchPoints();
-    }
 </script>
-</body>
-</html>
