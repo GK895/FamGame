@@ -44,7 +44,7 @@
         </div>
     </div>
 
-   <script>
+ <script>
     let sheetId = "1YVO59qBs1atrOgY6rJLUI75-KzKBF78iN5ZH8r6Yv0o";
     let clientId = "203005866385-jm1rkp0u1j94i8iilgs4dn9l7j5ivm2a.apps.googleusercontent.com";
     let redirectUri = "https://gk895.github.io/FamGame/";
@@ -113,6 +113,27 @@
         } else if (person === 'wife') {
             wifePoints += value;
         }
+
+        await updatePoints(husbandPoints, wifePoints);
+    }
+
+    async function redeemPoints(cost) {
+        let currentPoints = await fetchPoints();
+        let husbandPoints = currentPoints.husbandPoints;
+        let wifePoints = currentPoints.wifePoints;
+        let totalPoints = husbandPoints + wifePoints;
+
+        if (totalPoints < cost) {
+            alert("Not enough points to redeem this reward!"); // Show message if not enough points
+            return;
+        }
+
+        // Deduct points proportionally from both
+        let husbandShare = husbandPoints / totalPoints;
+        let wifeShare = wifePoints / totalPoints;
+
+        husbandPoints -= Math.round(cost * husbandShare);
+        wifePoints -= Math.round(cost * wifeShare);
 
         await updatePoints(husbandPoints, wifePoints);
     }
