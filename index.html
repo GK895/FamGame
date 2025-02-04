@@ -52,7 +52,7 @@
         let apiKey = "AIzaSyCtGnPiwGVuByuzMxeprkhfVP4ZTfrAXus";
         let accessToken = null;
 
-        async function fetchPoints() {
+       async function fetchPoints() {
         if (!accessToken) {
             console.error("No access token found.");
             return;
@@ -69,6 +69,7 @@
         let wifePoints = parseInt(values[1]) || 0;
 
         updateUI(husbandPoints, wifePoints);
+        return { husbandPoints, wifePoints }; // Возвращаем значения
     }
 
     async function updatePoints(husbandPoints, wifePoints) {
@@ -93,10 +94,9 @@
     }
 
     async function addPoints(person, value) {
-        await fetchPoints(); // Дождёмся загрузки текущих баллов
-
-        let husbandPoints = parseInt(document.getElementById('husbandPercent').innerText) || 0;
-        let wifePoints = parseInt(document.getElementById('wifePercent').innerText) || 0;
+        let currentPoints = await fetchPoints(); // Дождёмся загрузки баллов
+        let husbandPoints = currentPoints.husbandPoints;
+        let wifePoints = currentPoints.wifePoints;
 
         if (person === 'husband') {
             husbandPoints += value;
@@ -104,7 +104,7 @@
             wifePoints += value;
         }
 
-        await updatePoints(husbandPoints, wifePoints); // Обновляем баллы в Google Sheets
+        await updatePoints(husbandPoints, wifePoints);
     }
 
     function updateUI(husbandPoints, wifePoints) {
