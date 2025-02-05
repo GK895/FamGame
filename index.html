@@ -181,8 +181,8 @@
     function updateUI() {
         let totalPoints = husbandPoints + wifePoints;
         document.getElementById("totalPoints").innerText = totalPoints;
-        document.getElementById("husbandPoints").innerText = 100 * husbandPoints/totalPoints;
-        document.getElementById("wifePoints").innerText = 100 * wifePoints/totalPoints;
+        document.getElementById("husbandPoints").innerText = husbandPoints;
+        document.getElementById("wifePoints").innerText = wifePoints;
     }
 
     function loadRewards() {
@@ -205,8 +205,12 @@
 
     function redeemPoints(cost) {
         let totalPoints = husbandPoints + wifePoints;
-        if (totalPoints >= cost)
+        if (totalPoints >= cost) {
+            husbandPoints = Math.max(0, husbandPoints - cost/2);
+            wifePoints = Math.max(0, wifePoints - cost/2);
             totalPoints = Math.max(0, totalPoints - cost);
+            localStorage.setItem("husbandPoints", husbandPoints);
+            localStorage.setItem("wifePoints", wifePoints);
             localStorage.setItem("totalPoints", totalPoints);
             updateUI();
         } else {
