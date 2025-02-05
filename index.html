@@ -122,22 +122,13 @@
     </div>
 
 <script>
-    let sheetId = "1YVO59qBs1atrOgY6rJLUI75-KzKBF78iN5ZH8r6Yv0o";
+let sheetId = "1YVO59qBs1atrOgY6rJLUI75-KzKBF78iN5ZH8r6Yv0o";
 let clientId = "203005866385-jm1rkp0u1j94i8iilgs4dn9l7j5ivm2a.apps.googleusercontent.com";
 let redirectUri = "https://gk895.github.io/FamGame/";
 let scope = "https://www.googleapis.com/auth/spreadsheets";
 let apiKey = "AIzaSyCtGnPiwGVuByuzMxeprkhfVP4ZTfrAXus";
 let accessToken = null;
 
-function toggleTheme() {
-        document.body.classList.toggle("dark-mode");
-        localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
-    }
-
-    if (localStorage.getItem("theme") === "dark") {
-        document.body.classList.add("dark-mode");
-    }
-    
 async function authenticate() {
     let authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=consent`;
     window.location.href = authUrl;
@@ -182,7 +173,8 @@ async function updatePoints(husbandPoints, wifePoints) {
     });
     updateUI(husbandPoints, wifePoints);
 }
-   async function addPoints(person, value) {
+
+async function addPoints(person, value) {
     let currentPoints = await fetchPoints();
     let husbandPoints = currentPoints.husbandPoints;
     let wifePoints = currentPoints.wifePoints;
@@ -192,8 +184,9 @@ async function updatePoints(husbandPoints, wifePoints) {
         wifePoints += value;
     }
     await updatePoints(husbandPoints, wifePoints);
-} 
-    async function redeemPoints(cost) {
+}
+
+async function redeemPoints(cost) {
     let currentPoints = await fetchPoints();
     let husbandPoints = currentPoints.husbandPoints;
     let wifePoints = currentPoints.wifePoints;
@@ -202,17 +195,37 @@ async function updatePoints(husbandPoints, wifePoints) {
         alert("Not enough points to redeem this reward!");
         return;
     }
+    husbandPoints -= cost / 2;
+    wifePoints -= cost / 2;
+    await updatePoints(husbandPoints, wifePoints);
+}
 
-    
-    
-    
+function updateUI(husbandPoints, wifePoints) {
+    let totalPoints = husbandPoints + wifePoints;
+    let husbandPercent = totalPoints > 0 ? Math.round((husbandPoints / totalPoints) * 100) : 50;
+    let wifePercent = totalPoints > 0 ? Math.round((wifePoints / totalPoints) * 100) : 50;
+    document.getElementById("totalPoints").innerText = totalPoints;
+    document.getElementById("husbandPoints").innerText = husbandPercent + "%";
+    document.getElementById("wifePoints").innerText = wifePercent + "%";
+}
 
-    let husbandPoints = parseInt(localStorage.getItem("husbandPoints")) || 0;
-    let wifePoints = parseInt(localStorage.getItem("wifePoints")) || 0;
-    updateUI();
+function resetPoints() {
+    updatePoints(0, 0);
+}
 
+accessToken = getAccessTokenFromURL();
+if (!accessToken) {
+    authenticate();
+} else {
+    fetchPoints();
+}
+
+// Load tasks dynamically
+function loadTasks() {
+    let husbandSection = document.querySelector(".husband-tasks");
+    let wifeSection = document.querySelector(".wife-tasks");
     let tasks = [
-        { text: "Prepare a surprise treat", points: 10, person: "husband" },
+         { text: "Prepare a surprise treat", points: 10, person: "husband" },
         { text: "Plan a romantic date night", points: 15, person: "husband" },
         { text: "Give a 10-minute massage", points: 10, person: "husband" },
         { text: "Write a love letter or note", points: 10, person: "husband" },
@@ -233,45 +246,18 @@ async function updatePoints(husbandPoints, wifePoints) {
         { text: "Dress up in an outfit he loves", points: 10, person: "wife" },
         { text: "Take over one of his usual chores for a day", points: 10, person: "wife" },
         { text: "Plan a fun adventure (outdoors or at home)", points: 20, person: "wife" }
-        ];
-
-    function loadTasks() {
-        let husbandSection = document.querySelector(".husband-tasks");
-        let wifeSection = document.querySelector(".wife-tasks");
-
-        tasks.forEach(task => {
-            let taskElement = document.createElement("div");
-            taskElement.classList.add("task");
-            taskElement.innerHTML = `${task.text} <span>+${task.points} pts</span>`;
-            taskElement.onclick = function() { addPoints(task.person, task.points); };
-
-            if (task.person === "husband") {
-                husbandSection.appendChild(taskElement);
-            } else {
-                wifeSection.appendChild(taskElement);
-            }
-        });
-    }
-
-    function addPoints(person, points) {
-        if (person === "husband") {
-            husbandPoints += points;
+    ];
+    tasks.forEach(task => {
+        let taskElement = document.createElement("div");
+        taskElement.classList.add("task");
+        taskElement.innerHTML = `${task.text} <span>+${task.points} pts</span>`;
+        taskElement.onclick = function() { addPoints(task.person, task.points); };
+        if (task.person === "husband") {
+            husbandSection.appendChild(taskElement);
         } else {
-            wifePoints += points;
+            wifeSection.appendChild(taskElement);
         }
-        localStorage.setItem("husbandPoints", husbandPoints);
-        localStorage.setItem("wifePoints", wifePoints);
-        updateUI();
-    }
-
-    function updateUI() {
-        let totalPoints = husbandPoints + wifePoints;
-        document.getElementById("totalPoints").innerText = totalPoints;
-        document.getElementById("husbandPoints").innerText = husbandPoints;
-        document.getElementById("wifePoints").innerText = wifePoints;
-    }
-
-    function loadRewards() {
+   function loadRewards() {
         let rewardsSection = document.querySelector(".rewards-section");
 
         let rewards = [
@@ -295,33 +281,12 @@ async function updatePoints(husbandPoints, wifePoints) {
             rewardsSection.appendChild(rewardElement);
         });
     }
-
-    function redeemPoints(cost) {
-        let totalPoints = husbandPoints + wifePoints;
-        if (totalPoints >= cost) {
-            husbandPoints = Math.max(0, husbandPoints - cost/2);
-            wifePoints = Math.max(0, wifePoints - cost/2);
-            totalPoints = Math.max(0, totalPoints - cost);
-            localStorage.setItem("husbandPoints", husbandPoints);
-            localStorage.setItem("wifePoints", wifePoints);
-            localStorage.setItem("totalPoints", totalPoints);
-            updateUI();
-        } else {
-            alert("Not enough points!");
-        }
-    }
-
-    function resetPoints() {
-        localStorage.clear();
-        husbandPoints = 0;
-        wifePoints = 0;
-        updateUI();
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        loadTasks();
-        loadRewards();
     });
+}
+
+document.addEventListener("DOMContentLoaded", loadTasks);
 </script>
+
+
 </body>
 </html>
