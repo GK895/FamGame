@@ -206,10 +206,12 @@
     function redeemPoints(cost) {
         let totalPoints = husbandPoints + wifePoints;
         if (totalPoints >= cost) {
-            husbandPoints = Math.max(0, husbandPoints - cost);
-            wifePoints = Math.max(0, wifePoints - (cost - husbandPoints));
+            husbandPoints = Math.max(0, husbandPoints - cost/2);
+            wifePoints = Math.max(0, wifePoints - cost/2);
+            totalPoints = Math.max(0, totalPoints - cost);
             localStorage.setItem("husbandPoints", husbandPoints);
             localStorage.setItem("wifePoints", wifePoints);
+            localStorage.setItem("totalPoints", totalPoints);
             updateUI();
         } else {
             alert("Not enough points!");
