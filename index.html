@@ -4,156 +4,187 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FamGame - Couples Reward System</title>
+    <script src="https://apis.google.com/js/api.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: #004d40; }
-        .task, .reward { padding: 10px; margin: 10px 0; background: #e8f5e9; border-radius: 5px; cursor: pointer; display: flex; justify-content: space-between; }
-        .task:hover, .reward:hover { background: #c8e6c9; }
-        #points { text-align: center; font-size: 24px; font-weight: bold; color: #004d40; }
+        :root {
+            --bg-color: #f4f4f4;
+            --text-color: #004d40;
+            --card-bg: white;
+            --hover-bg: #c8e6c9;
+            --button-bg: #004d40;
+            --button-hover: #00332a;
+        }
+
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #f4f4f4;
+            --card-bg: #1e1e1e;
+            --hover-bg: #2b2b2b;
+            --button-bg: #00796b;
+            --button-hover: #004d40;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+
+        h1, h2 { text-align: center; }
+
+        .task, .reward {
+            padding: 10px;
+            margin: 10px 0;
+            background: var(--hover-bg);
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            transition: background 0.3s;
+        }
+
+        .task:hover, .reward:hover {
+            background: var(--button-bg);
+            color: white;
+        }
+
+        #points {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
         .section { margin-top: 20px; }
-        button { background-color: #004d40; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #00332a; }
-        .progress { text-align: center; font-size: 18px; margin-top: 10px; color: #004d40; }
+
+        button {
+            background-color: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .theme-toggle {
+            text-align: center;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
+    <div class="theme-toggle">
+        <button onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
+        <button onclick="handleAuthClick()">🔑 Sign in with Google</button>
+    </div>
+
     <div class="container">
         <h1>FamGame - Couples Reward System</h1>
         <h2>Total Points: <span id="totalPoints">0</span></h2>
         <div class="progress">
-            Husband Contribution: <span id="husbandPercent">0%</span> | Wife Contribution: <span id="wifePercent">0%</span>
+            Husband Contribution: <span id="husbandPoints">0</span> | Wife Contribution: <span id="wifePoints">0</span>
         </div>
+
         <div class="section">
             <h2>Husband Tasks</h2>
-            <div class="task" onclick="addPoints('husband', 10)">Prepare Surprise <span>+10 pts</span></div>
-            <div class="task" onclick="addPoints('husband', 15)">Plan Date Night <span>+15 pts</span></div>
+            <div class="husband-tasks"></div>
         </div>
+
         <div class="section">
             <h2>Wife Tasks</h2>
-            <div class="task" onclick="addPoints('wife', 10)">Cook Favorite Meal <span>+10 pts</span></div>
-            <div class="task" onclick="addPoints('wife', 15)">Support Husband's Project <span>+15 pts</span></div>
+            <div class="wife-tasks"></div>
         </div>
+
         <div class="section">
             <h2>Rewards</h2>
-            <div class="reward" onclick="redeemPoints(50)">Movie Night <span>-50 pts</span></div>
-            <div class="reward" onclick="redeemPoints(100)">Romantic Getaway <span>-100 pts</span></div>
+            <div class="rewards-section"></div>
         </div>
+
         <div class="section">
             <button onclick="resetPoints()">Reset Points</button>
         </div>
     </div>
 
- <script>
-    let sheetId = "1YVO59qBs1atrOgY6rJLUI75-KzKBF78iN5ZH8r6Yv0o";
-    let clientId = "203005866385-jm1rkp0u1j94i8iilgs4dn9l7j5ivm2a.apps.googleusercontent.com";
-    let redirectUri = "https://gk895.github.io/FamGame/";
-    let scope = "https://www.googleapis.com/auth/spreadsheets";
-    let apiKey = "AIzaSyCtGnPiwGVuByuzMxeprkhfVP4ZTfrAXus";
-    let accessToken = null;
+<script>
+    const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID";
+    const API_KEY = "YOUR_GOOGLE_API_KEY";
+    const SHEET_ID = "YOUR_GOOGLE_SHEET_ID";
+    const DISCOVERY_DOCS = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
+    const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
 
-    async function authenticate() {
-        let authUrl = https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=consent;
-        window.location.href = authUrl;
+    function toggleTheme() {
+        document.body.classList.toggle("dark-mode");
+        localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
     }
 
-    function getAccessTokenFromURL() {
-        let params = new URLSearchParams(window.location.hash.substring(1));
-        return params.get("access_token");
+    if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark-mode");
     }
 
-    async function fetchPoints() {
-        if (!accessToken) {
-            console.error("No access token found.");
-            return { husbandPoints: 0, wifePoints: 0 };
-        }
-
-        let sheetUrl = https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?key=${apiKey};
-        let response = await fetch(sheetUrl, {
-            headers: { "Authorization": Bearer ${accessToken} }
+    function initClient() {
+        gapi.client.init({
+            apiKey: API_KEY,
+            clientId: CLIENT_ID,
+            discoveryDocs: DISCOVERY_DOCS,
+            scope: SCOPES
+        }).then(() => {
+            gapi.auth2.getAuthInstance().isSignedIn.listen(updateSignInStatus);
+            updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
         });
-
-        let data = await response.json();
-        let values = data.values ? data.values[0] : [0, 0, 0];
-        let husbandPoints = parseInt(values[0]) || 0;
-        let wifePoints = parseInt(values[1]) || 0;
-
-        updateUI(husbandPoints, wifePoints);
-        return { husbandPoints, wifePoints };
     }
 
-    async function updatePoints(husbandPoints, wifePoints) {
-        if (!accessToken) {
-console.error("No access token found.");
-            return;
-        }
+    function handleAuthClick() {
+        gapi.auth2.getAuthInstance().signIn();
+    }
 
+    function updateSignInStatus(isSignedIn) {
+        if (isSignedIn) {
+            fetchPoints();
+        }
+    }
+
+    function fetchPoints() {
+        gapi.client.sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: "Sheet1!A2:C2"
+        }).then(response => {
+            let values = response.result.values ? response.result.values[0] : [0, 0, 0];
+            updateUI(parseInt(values[0]), parseInt(values[1]));
+        });
+    }
+
+    function updatePoints(husbandPoints, wifePoints) {
         let values = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
-        let updateUrl = https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:C2?valueInputOption=RAW;
 
-        await fetch(updateUrl, {
-            method: "PUT",
-            headers: {
-                "Authorization": Bearer ${accessToken},
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ values })
+        gapi.client.sheets.spreadsheets.values.update({
+            spreadsheetId: SHEET_ID,
+            range: "Sheet1!A2:C2",
+            valueInputOption: "RAW",
+            resource: { values }
+        }).then(() => {
+            updateUI(husbandPoints, wifePoints);
         });
-
-        updateUI(husbandPoints, wifePoints);
-    }
-
-    async function addPoints(person, value) {
-        let currentPoints = await fetchPoints();
-        let husbandPoints = currentPoints.husbandPoints;
-        let wifePoints = currentPoints.wifePoints;
-
-        if (person === 'husband') {
-            husbandPoints += value;
-        } else if (person === 'wife') {
-            wifePoints += value;
-        }
-
-        await updatePoints(husbandPoints, wifePoints);
-    }
-
-    async function redeemPoints(cost) {
-        let currentPoints = await fetchPoints();
-        let husbandPoints = currentPoints.husbandPoints;
-        let wifePoints = currentPoints.wifePoints;
-        let totalPoints = husbandPoints + wifePoints;
-
-        if (totalPoints < cost) {
-            alert("Not enough points to redeem this reward!"); // Show message if not enough points
-            return;
-        }
-
-        // Deduct points proportionally from both
-        let husbandShare = husbandPoints / totalPoints;
-        let wifeShare = wifePoints / totalPoints;
-
-        husbandPoints -= Math.round(cost * husbandShare);
-        wifePoints -= Math.round(cost * wifeShare);
-
-        await updatePoints(husbandPoints, wifePoints);
     }
 
     function updateUI(husbandPoints, wifePoints) {
         let totalPoints = husbandPoints + wifePoints;
         document.getElementById('totalPoints').innerText = totalPoints;
-        document.getElementById('husbandPercent').innerText = husbandPoints;
-        document.getElementById('wifePercent').innerText = wifePoints;
-    }
-
-    function resetPoints() {
-        updatePoints(0, 0);
-    }
-
-    // Get access token & authenticate if missing
-    accessToken = getAccessTokenFromURL();
-    if (!accessToken) {
-        authenticate();
-    } else {
-        fetchPoints();
-    }
-</script>
+       
