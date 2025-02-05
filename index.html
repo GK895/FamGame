@@ -287,7 +287,11 @@ function loadTasks() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", loadTasks);
+document.addEventListener("DOMContentLoaded", function() {
+    loadTasks();
+    loadRewards(); // Call the function to load rewards
+});
+
 </script>
 
 
