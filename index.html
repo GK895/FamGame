@@ -136,18 +136,28 @@
     updateUI();
 
     let tasks = [
+        { text: "Prepare a surprise treat", points: 10, person: "husband" },
+        { text: "Plan a romantic date night", points: 15, person: "husband" },
         { text: "Give a 10-minute massage", points: 10, person: "husband" },
-        { text: "Plan a surprise date night", points: 15, person: "husband" },
-        { text: "Write a love letter", points: 10, person: "husband" },
-        { text: "Make her coffee in the morning", points: 5, person: "husband" },
-        { text: "Clean the house before she asks", points: 10, person: "husband" },
-
+        { text: "Write a love letter or note", points: 10, person: "husband" },
+        { text: "Plan and organize something she has been wanting to do", points: 15, person: "husband" },
+        { text: "Take her out for a spontaneous walk", points: 10, person: "husband" },
+        { text: "Compliment her sincerely (not just appearance)", points: 5, person: "husband" },
+        { text: "Plan a weekend getaway (even if just at home)", points: 20, person: "husband" },
+        { text: "Organize a peaceful relaxation evening for her (candles, music, tea, or bath)", points: 10, person: "husband" },
+        { text: "Listen attentively to her thoughts, worries, and feelings without interrupting", points: 10, person: "husband" },
+        
         { text: "Cook his favorite meal", points: 10, person: "wife" },
-        { text: "Surprise him with a small gift", points: 15, person: "wife" },
-        { text: "Give him a long hug", points: 5, person: "wife" },
-        { text: "Support his hobby for a day", points: 10, person: "wife" },
-        { text: "Plan a gaming night for him", points: 15, person: "wife" }
-    ];
+        { text: "Support his hobby for a day (watching a game, gaming night)", points: 15, person: "wife" },
+        { text: "Give him a long hug (at least 30 seconds)", points: 5, person: "wife" },
+        { text: "Surprise him with a small thoughtful gift", points: 10, person: "wife" },
+        { text: "Write a cute or flirty text during the day", points: 5, person: "wife" },
+        { text: "Plan a home movie night with his favorite snacks", points: 10, person: "wife" },
+        { text: "Let him sleep in while handling morning tasks", points: 15, person: "wife" },
+        { text: "Dress up in an outfit he loves", points: 10, person: "wife" },
+        { text: "Take over one of his usual chores for a day", points: 10, person: "wife" },
+        { text: "Plan a fun adventure (outdoors or at home)", points: 20, person: "wife" }
+        ];
 
     function loadTasks() {
         let husbandSection = document.querySelector(".husband-tasks");
