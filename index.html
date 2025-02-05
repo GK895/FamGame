@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FamGame - Couples Reward System</title>
-    <script src="https://apis.google.com/js/api.js"></script>
     <style>
         :root {
             --bg-color: #f4f4f4;
@@ -93,7 +92,6 @@
 <body>
     <div class="theme-toggle">
         <button onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
-        <button onclick="handleAuthClick()">🔑 Sign in with Google</button>
     </div>
 
     <div class="container">
@@ -124,12 +122,6 @@
     </div>
 
 <script>
-    const CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID";
-    const API_KEY = "YOUR_GOOGLE_API_KEY";
-    const SHEET_ID = "YOUR_GOOGLE_SHEET_ID";
-    const DISCOVERY_DOCS = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
-    const SCOPES = "https://www.googleapis.com/auth/spreadsheets";
-
     function toggleTheme() {
         document.body.classList.toggle("dark-mode");
         localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
@@ -139,52 +131,102 @@
         document.body.classList.add("dark-mode");
     }
 
-    function initClient() {
-        gapi.client.init({
-            apiKey: API_KEY,
-            clientId: CLIENT_ID,
-            discoveryDocs: DISCOVERY_DOCS,
-            scope: SCOPES
-        }).then(() => {
-            gapi.auth2.getAuthInstance().isSignedIn.listen(updateSignInStatus);
-            updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+    let husbandPoints = parseInt(localStorage.getItem("husbandPoints")) || 0;
+    let wifePoints = parseInt(localStorage.getItem("wifePoints")) || 0;
+    updateUI();
+
+    let tasks = [
+        { text: "Give a 10-minute massage", points: 10, person: "husband" },
+        { text: "Plan a surprise date night", points: 15, person: "husband" },
+        { text: "Write a love letter", points: 10, person: "husband" },
+        { text: "Make her coffee in the morning", points: 5, person: "husband" },
+        { text: "Clean the house before she asks", points: 10, person: "husband" },
+
+        { text: "Cook his favorite meal", points: 10, person: "wife" },
+        { text: "Surprise him with a small gift", points: 15, person: "wife" },
+        { text: "Give him a long hug", points: 5, person: "wife" },
+        { text: "Support his hobby for a day", points: 10, person: "wife" },
+        { text: "Plan a gaming night for him", points: 15, person: "wife" }
+    ];
+
+    function loadTasks() {
+        let husbandSection = document.querySelector(".husband-tasks");
+        let wifeSection = document.querySelector(".wife-tasks");
+
+        tasks.forEach(task => {
+            let taskElement = document.createElement("div");
+            taskElement.classList.add("task");
+            taskElement.innerHTML = `${task.text} <span>+${task.points} pts</span>`;
+            taskElement.onclick = function() { addPoints(task.person, task.points); };
+
+            if (task.person === "husband") {
+                husbandSection.appendChild(taskElement);
+            } else {
+                wifeSection.appendChild(taskElement);
+            }
         });
     }
 
-    function handleAuthClick() {
-        gapi.auth2.getAuthInstance().signIn();
+    function addPoints(person, points) {
+        if (person === "husband") {
+            husbandPoints += points;
+        } else {
+            wifePoints += points;
+        }
+        localStorage.setItem("husbandPoints", husbandPoints);
+        localStorage.setItem("wifePoints", wifePoints);
+        updateUI();
     }
 
-    function updateSignInStatus(isSignedIn) {
-        if (isSignedIn) {
-            fetchPoints();
+    function updateUI() {
+        let totalPoints = husbandPoints + wifePoints;
+        document.getElementById("totalPoints").innerText = totalPoints;
+        document.getElementById("husbandPoints").innerText = husbandPoints;
+        document.getElementById("wifePoints").innerText = wifePoints;
+    }
+
+    function loadRewards() {
+        let rewardsSection = document.querySelector(".rewards-section");
+
+        let rewards = [
+            { text: "Movie Night (Cuddles & Snacks)", cost: 50 },
+            { text: "Breakfast in Bed", cost: 40 },
+            { text: "Romantic Dinner Date", cost: 100 }
+        ];
+
+        rewards.forEach(reward => {
+            let rewardElement = document.createElement("div");
+            rewardElement.classList.add("reward");
+            rewardElement.innerHTML = `${reward.text} <span>-${reward.cost} pts</span>`;
+            rewardElement.onclick = function() { redeemPoints(reward.cost); };
+            rewardsSection.appendChild(rewardElement);
+        });
+    }
+
+    function redeemPoints(cost) {
+        let totalPoints = husbandPoints + wifePoints;
+        if (totalPoints >= cost) {
+            husbandPoints = Math.max(0, husbandPoints - cost);
+            wifePoints = Math.max(0, wifePoints - (cost - husbandPoints));
+            localStorage.setItem("husbandPoints", husbandPoints);
+            localStorage.setItem("wifePoints", wifePoints);
+            updateUI();
+        } else {
+            alert("Not enough points!");
         }
     }
 
-    function fetchPoints() {
-        gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: SHEET_ID,
-            range: "Sheet1!A2:C2"
-        }).then(response => {
-            let values = response.result.values ? response.result.values[0] : [0, 0, 0];
-            updateUI(parseInt(values[0]), parseInt(values[1]));
-        });
+    function resetPoints() {
+        localStorage.clear();
+        husbandPoints = 0;
+        wifePoints = 0;
+        updateUI();
     }
 
-    function updatePoints(husbandPoints, wifePoints) {
-        let values = [[husbandPoints, wifePoints, husbandPoints + wifePoints]];
-
-        gapi.client.sheets.spreadsheets.values.update({
-            spreadsheetId: SHEET_ID,
-            range: "Sheet1!A2:C2",
-            valueInputOption: "RAW",
-            resource: { values }
-        }).then(() => {
-            updateUI(husbandPoints, wifePoints);
-        });
-    }
-
-    function updateUI(husbandPoints, wifePoints) {
-        let totalPoints = husbandPoints + wifePoints;
-        document.getElementById('totalPoints').innerText = totalPoints;
-       
+    document.addEventListener("DOMContentLoaded", () => {
+        loadTasks();
+        loadRewards();
+    });
+</script>
+</body>
+</html>
